@@ -197,7 +197,7 @@ app.get('/api/favorites', (req, res) => {
   });
 });
 
-// API：加入收藏
+// ✅ API：加入收藏（避免重複收藏）
 app.post('/api/favorites', (req, res) => {
   const username = req.session.username;
   const { product_id } = req.body;
@@ -205,12 +205,24 @@ app.post('/api/favorites', (req, res) => {
   if (!username) return res.status(401).json({ error: '請先登入' });
   if (!product_id) return res.status(400).json({ error: '缺少商品 ID' });
 
-  const sql = `INSERT INTO favorites (username, product_id) VALUES (?, ?)`;
-  productDB.run(sql, [username, product_id], (err) => {
+  const checkSql = `SELECT * FROM favorites WHERE username = ? AND product_id = ?`;
+  productDB.get(checkSql, [username, product_id], (err, row) => {
     if (err) {
-      console.error('加入收藏失敗:', err.message);
+      console.error('查詢收藏失敗:', err.message);
       return res.status(500).json({ error: '資料庫錯誤' });
     }
-    res.json({ success: true });
+
+    if (row) {
+      return res.json({ success: false, message: '已經收藏過這個商品' });
+    }
+
+    const insertSql = `INSERT INTO favorites (username, product_id) VALUES (?, ?)`;
+    productDB.run(insertSql, [username, product_id], (err) => {
+      if (err) {
+        console.error('加入收藏失敗:', err.message);
+        return res.status(500).json({ error: '資料庫錯誤' });
+      }
+      res.json({ success: true });
+    });
   });
 });

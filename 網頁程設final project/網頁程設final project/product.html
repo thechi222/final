@@ -148,6 +148,7 @@
     function addToFavorites(productId) {
       fetch('/api/favorites', {
         method: 'POST',
+        credentials: 'include',  // 這行很重要，要帶 cookie
         headers: {
           'Content-Type': 'application/json'
         },
@@ -169,3 +170,4 @@
   </script>
 </body>
 </html>
+
