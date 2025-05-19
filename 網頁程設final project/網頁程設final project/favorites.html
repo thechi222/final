@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FAVORITES</title>
+  <style>
+    .favorites-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      padding: 16px;
+    }
+    .favorite-card {
+      position: relative;
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+      background-color: #f9f9f9;
+    }
+    .favorite-card img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+    }
+    .favorite-card p {
+      margin-top: 8px;
+      font-size: 16px;
+    }
+    .navbar {
+      background-color: #333;
+      padding: 10px 20px;
+      text-align: center;
+    }
+    .navbar a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-size: 16px;
+    }
+    .navbar a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center; color: cadetblue;">MY FAVORITES</h1>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <span><a href="product.html">SHOP</a></span>
+    <span><a href="favorites.html">★</a></span>
+    <span><a href="login.html">LOGIN</a></span>
+    <span><a href="signup.html">SIGN UP</a></span>
+    <span><a href="search.html">SEARCH</a></span>
+    <span><a href="cart.html">CART</a></span>
+  </div>
+
+  <div class="favorites-grid" id="favorites-grid">
+    <!-- 從後端 API 載入 favorites -->
+  </div>
+
+  <script>
+    fetch('/api/favorites', { credentials: 'include' })
+      .then(res => {
+        if (!res.ok) throw new Error('Unauthorized or error');
+        return res.json();
+      })
+      .then(favorites => {
+        const container = document.getElementById('favorites-grid');
+        if (!favorites.length) {
+          container.innerHTML = "<h2 style='text-align:center; color: cadetblue;'>No favorites yet</h2>";
+          return;
+        }
+        favorites.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'favorite-card';
+
+          // 假設圖片命名規則是小寫商品名去空白.jpg
+          const imageName = item.name.toLowerCase().replace(/\s+/g, '') + '.jpg';
+
+          card.innerHTML = `
+            <img src="${imageName}" alt="${item.name}" />
+            <p>${item.name}</p>
+            <p>${item.price}</p>
+          `;
+          container.appendChild(card);
+        });
+      })
+      .catch(err => {
+        console.error('Error loading favorites:', err);
+        document.getElementById('favorites-grid').innerHTML = "<h2 style='text-align:center; color: red;'>Failed to load favorites</h2>";
+      });
+  </script>
+</body>
+</html>
