@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ALL PRODUCTS</title>
+  <style>
+    /* 保持原有的 CSS 不變 */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+      padding: 16px;
+    }
+    .product-card {
+      position: relative;
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+      background-color: #f9f9f9;
+    }
+    .product-card img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+    }
+    .product-card p {
+      margin-top: 8px;
+      font-size: 16px;
+    }
+    .new-in-label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background-color: darkolivegreen;
+      color: white;
+      padding: 4px 8px;
+      font-weight: bold;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+    .favorite-icon {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      text-decoration: none;
+      font-size: 20px;
+      color: lightslategrey;
+      background-color: white;
+      border-radius: 50%;
+      padding: 4px 6px;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+    .favorite-icon:hover {
+      color: lightslategrey;
+    }
+    .size-options {
+      display: none;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    .product-card:hover .size-options {
+      display: block;
+    }
+    .add-to-cart-btn {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background-color: #200a57;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .add-to-cart-btn:hover {
+      background-color: #45a04932;
+    }
+    .navbar {
+      background-color: #333;
+      padding: 10px 20px;
+      text-align: center;
+    }
+    .navbar a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-size: 16px;
+    }
+    .navbar a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center; color: cadetblue;">ALL PRODUCTS</h1>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <span><a href="product.html">SHOP</a></span>
+    <span><a href="favorites.html">★</a></span>
+    <span><a href="login.html">LOGIN</a></span>
+    <span><a href="signup.html">SIGN UP</a></span>
+    <span><a href="search.html">SEARCH</a></span>
+    <span><a href="cart.html">CART</a></span>
+  </div>
+
+  <div class="product-grid" id="product-grid">
+    <!-- 動態加載產品 -->
+  </div>
+
+  <script>
+    // 從後端加載產品資料
+    fetch('/api/products')
+      .then(response => response.json())
+      .then(products => {
+        const productGrid = document.getElementById('product-grid');
+        products.forEach(product => {
+          const productCard = document.createElement('div');
+          productCard.classList.add('product-card');
+          
+          // 構建每個產品卡片的 HTML 結構
+          productCard.innerHTML = `
+            <span class="favorite-icon" onclick="addToFavorites('${product.name}', '${product.price}')">★</span>
+            <span class="new-in-label">NEW IN</span>
+            <img src="${product.image}" alt="${product.name}" />
+            <p>${product.name}</p>
+            <p>${product.price}</p>
+            ${product.sizes ? `<div class="size-options">Sizes: ${product.sizes.join(' | ')}</div>` : ''}
+            <button class="add-to-cart-btn" onclick="addToCart('${product.name}', '${product.price}')">Add to Cart</button>
+          `;
+          
+          productGrid.appendChild(productCard);
+        });
+      });
+
+    // 加入購物車
+    function addToCart(name, price) {
+      let cart = JSON.parse(localStorage.getItem('cart')) || [];
+      const exists = cart.some(item => item.name === name && item.price === price);
+      if (exists) {
+        alert("This item is already in your cart!");
+        return;
+      }
+      cart.push({ name, price });
+      localStorage.setItem('cart', JSON.stringify(cart));
+      alert("Item successfully added to cart!");
+    }
+
+    // 加入收藏
+    function addToFavorites(name, price) {
+      let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+      const exists = favorites.some(item => item.name === name && item.price === price);
+      if (exists) {
+        alert("This item is already in your favorites!");
+        return;
+      }
+      favorites.push({ name, price });
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+      alert("Item successfully added to favorites!");
+    }
+  </script>
+</body>
+</html>
