@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cart - GEARNEST</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .cart-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+    .cart-item img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+    }
+    .cart-item-details {
+      flex-grow: 1;
+      margin-left: 10px;
+    }
+    .cart-item-details p {
+      margin: 5px 0;
+    }
+    .cart-item-quantity {
+      display: flex;
+      align-items: center;
+    }
+    .cart-item-quantity input {
+      width: 40px;
+      text-align: center;
+      padding: 5px;
+      border: 1px solid #ddd;
+    }
+    .remove-item {
+      color: red;
+      cursor: pointer;
+    }
+    .cart-summary {
+      text-align: right;
+      margin-top: 20px;
+    }
+    .cart-summary p {
+      font-size: 18px;
+    }
+    .checkout-btn {
+      background-color: cadetblue;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .checkout-btn:hover {
+      background-color: #008080;
+    }
+    .empty-cart {
+      text-align: center;
+      font-size: 18px;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center; color: cadetblue;">GEARNEST - Your Cart</h1>
+
+  <div class="navbar">
+    <span><a href="product.html">SHOP</a></span>
+    <span><a href="favorites.html">★</a></span>
+    <span><a href="login.html">LOGIN</a></span>
+    <span><a href="signup.html">SIGN UP</a></span>
+    <span><a href="search.html">SEARCH</a></span>
+    <span><a href="cart.html">CART</a></span>
+  </div>
+
+  <div class="cart-container">
+    <div id="cartItems"></div>
+    <div id="emptyCartMessage" class="empty-cart" style="display: none;">
+      <p>Your cart is empty!</p>
+    </div>
+
+    <div class="cart-summary" id="cartSummary" style="display: none;">
+      <p><strong>Total:</strong> $<span id="totalAmount">0</span></p>
+      <button class="checkout-btn" onclick="checkout()">Proceed to Checkout</button>
+    </div>
+  </div>
+
+  <script>
+    let cart = [];
+
+    // Function to fetch cart data from the server
+    function fetchCartData() {
+      const userId = 1;  // 假設用戶ID是1，實際應從登錄狀態中獲取
+
+      fetch(`/cart?user_id=${userId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.cart) {
+            cart = data.cart;
+            renderCart();
+          }
+        })
+        .catch(err => console.error('Error fetching cart data:', err));
+    }
+
+    // Function to render cart items
+    function renderCart() {
+      const cartItemsContainer = document.getElementById('cartItems');
+      const emptyCartMessage = document.getElementById('emptyCartMessage');
+      const cartSummary = document.getElementById('cartSummary');
+      const totalAmount = document.getElementById('totalAmount');
+
+      cartItemsContainer.innerHTML = '';
+      let total = 0;
+
+      if (cart.length === 0) {
+        emptyCartMessage.style.display = 'block';
+        cartSummary.style.display = 'none';
+      } else {
+        emptyCartMessage.style.display = 'none';
+        cartSummary.style.display = 'block';
+
+        cart.forEach((item) => {
+          const cartItemDiv = document.createElement('div');
+          cartItemDiv.classList.add('cart-item');
+
+          const imageSrc = item.image;
+
+          cartItemDiv.innerHTML = `
+            <img src="${imageSrc}" alt="${item.product_name}" />
+            <div class="cart-item-details">
+              <p><strong>${item.product_name}</strong></p>
+              <p>$${item.price}</p>
+              <div class="cart-item-quantity">
+                <input type="number" value="${item.quantity}" min="1" onchange="updateQuantity(${item.id}, this.value)" />
+                <span class="remove-item" onclick="removeItem(${item.id})">Remove</span>
+              </div>
+            </div>
+          `;
+          cartItemsContainer.appendChild(cartItemDiv);
+
+          total += parseFloat(item.price) * item.quantity;
+        });
+
+        totalAmount.innerText = total.toFixed(2);
+      }
+    }
+
+    // Function to update the quantity of an item
+    function updateQuantity(id, quantity) {
+      fetch(`/cart/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Quantity updated');
+          fetchCartData();  // Re-fetch cart data after updating
+        }
+      })
+      .catch(err => console.error('Error updating quantity:', err));
+    }
+
+    // Function to remove an item from the cart
+    function removeItem(id) {
+      fetch(`/cart/${id}`, {
+        method: 'DELETE'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Item removed');
+          fetchCartData();  // Re-fetch cart data after deletion
+        }
+      })
+      .catch(err => console.error('Error removing item:', err));
+    }
+
+    // Function to handle checkout
+    function checkout() {
+      alert('Proceeding to checkout...');
+      // Here you would normally redirect to a checkout page or process payment
+    }
+
+    // Call fetchCartData function when the page loads
+    window.onload = fetchCartData;
+  </script>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-column">
+        <h4>ABOUT</h4>
+        <a href="#">FAQs</a>
+        <a href="#">Contact Form</a>
+        <a href="#">Shipping Policy</a>
+      </div>
+      <div class="footer-column">
+        <h4>CAREERS</h4>
+        <a href="#">Join Us</a>
+        <a href="#">Internships</a>
+      </div>
+      <div class="footer-column">
+        <h4>LEGAL</h4>
+        <a href="#">Return & Exchange Policy</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Legal Notice</a>
+      </div>
+      <div class="footer-column">
+        <h4>GET 10% OFF</h4>
+        <p>Subscribe with your email to get 10% off on your first order!</p>
+        <div class="subscribe">
+          <input type="email" placeholder="Enter your email" /><br />
+          <button>Get Your Discount</button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">
+      &copy; 2025 GEARNEST. All rights reserved.
+    </div>
+  </footer>
+</body>
+</html>
