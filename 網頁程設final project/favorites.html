@@ -17,6 +17,7 @@
       padding: 8px;
       text-align: center;
       background-color: #f9f9f9;
+      cursor: pointer;
     }
     .favorite-card img {
       width: 100%;
@@ -26,6 +27,22 @@
     .favorite-card p {
       margin-top: 8px;
       font-size: 16px;
+    }
+    .remove-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: crimson;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .remove-btn:hover {
+      background-color: darkred;
     }
     .navbar {
       background-color: #333;
@@ -38,8 +55,9 @@
       text-decoration: none;
       font-size: 16px;
     }
-    .navbar a:hover {
+    .navbar a:hover, .navbar a.active {
       text-decoration: underline;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -49,7 +67,7 @@
   <!-- Navbar -->
   <div class="navbar">
     <span><a href="product.html">SHOP</a></span>
-    <span><a href="favorites.html">★</a></span>
+    <span><a href="favorites.html" class="active">★</a></span>
     <span><a href="login.html">LOGIN</a></span>
     <span><a href="signup.html">SIGN UP</a></span>
     <span><a href="search.html">SEARCH</a></span>
@@ -61,6 +79,25 @@
   </div>
 
   <script>
+    function removeFavorite(productId) {
+      fetch(`/api/favorites/${productId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert(data.message || "Failed to remove favorite");
+        }
+      })
+      .catch(err => {
+        console.error("Remove failed:", err);
+        alert("Error removing favorite");
+      });
+    }
+
     fetch('/api/favorites', { credentials: 'include' })
       .then(res => {
         if (!res.ok) throw new Error('Unauthorized or error');
@@ -69,21 +106,26 @@
       .then(favorites => {
         const container = document.getElementById('favorites-grid');
         if (!favorites.length) {
-          container.innerHTML = "<h2 style='text-align:center; color: cadetblue;'>No favorites yet</h2>";
+          container.innerHTML = "<h2 style='text-align:center; color: cadetblue;'>No favorites yet<br><a href='product.html' style='color: steelblue;'>Start Shopping</a></h2>";
           return;
         }
         favorites.forEach(item => {
           const card = document.createElement('div');
           card.className = 'favorite-card';
 
-          // 假設圖片命名規則是小寫商品名去空白.jpg
           const imageName = item.name.toLowerCase().replace(/\s+/g, '') + '.jpg';
 
           card.innerHTML = `
+            <button class="remove-btn" onclick="event.stopPropagation(); removeFavorite(${item.product_id})">✕</button>
             <img src="${imageName}" alt="${item.name}" />
             <p>${item.name}</p>
-            <p>${item.price}</p>
+            <p>$${parseFloat(item.price).toFixed(2)}</p>
           `;
+
+          card.addEventListener('click', () => {
+            window.location.href = `product.html?id=${item.product_id}`;
+          });
+
           container.appendChild(card);
         });
       })
